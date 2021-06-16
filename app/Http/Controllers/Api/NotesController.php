@@ -2,37 +2,68 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Note;
-use App\Models\Setting;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class NotesController extends Controller
 {
-  public function get() {
+  public function get(Request $request)
+  {
+    $filter = $request->get('filter');
+
+    // WHEN FILTER IS NOT SPECIFIED
+    $notes = Note::when(!$filter, function ($q) {
+      // Get unarchived notes
+      return $q->unarchived()
+
+      // Sort by created_at DESC (newsest -> oldest)
+        ->latest();
+    })
+
+    // WHEN FILTER IS 'archive'
+    ->when(($filter == 'archive'), function ($q) {
+      // Get archived notes
+      return $q->archived()
+
+      // Sort by archived_at DESC
+        ->latest('archived_at');
+    })
+
+    // WHEN FILTER IS TRASH
+    ->when(($filter == 'trash'), function ($q) {
+      // Get only trashed (soft deleted model) notes [deleted_at IS NOT NULL]
+      return $q->onlyTrashed()
+
+      // Sort by deleted_at DESC
+        ->latest('deleted_at');
+    })
+
+    // GET ALL RESULTS
+    ->get();
+
     return [
-      'notes' => [
-        'unpinned' => Note::unarchived()->unpinned()->latest()->get(),
-        'pinned' => Note::unarchived()->pinned()->latest('pinned_at')->get(),
-        'archived' => Note::archived()->latest('archived_at')->get(),
-        'trashed' => Note::onlyTrashed()->latest('deleted_at')->get()
-      ],
-      'settings' => Setting::all()->mapWithKeys( function($item) {
-        return [$item['key'] => $item['value']];
-      })
+      'notes' => $notes,
     ];
   }
 
   public function store(Request $request) {
-    $note = new Note($request->all());
+    // UPDATE OR INSERT
+    // https://laravel.com/docs/8.x/eloquent#upserts
+
+    $saved = Note::upsert(
+      $request->all(),
+      'id'
+    );
 
     return response()->json([
-      'saved' => $note->save()
+      'saved' => !!$saved
     ]);
   }
 
   public function update(Request $request, $id) {
-    $updated = Note::find($id)->update($request->all());
+    $note = Note::find($id);
+    $updated = $note->update($request->all());
 
     return response()->json([
       'updated' => $updated
@@ -41,6 +72,8 @@ class NotesController extends Controller
 
   public function delete($id) {
     $note = Note::find($id);
+
+    // REMOVE pinned status (Setting pinned_at to NULL)
     $note->update([
       'pinned_at' => null
     ]);
@@ -65,6 +98,13 @@ class NotesController extends Controller
       ->find($id)
       ->forceDelete();
 
+    return response()->json([
+      'deleted' => $deleted
+    ]);
+  }
+
+  public function emptyTrash() {
+    $deleted = Note::onlyTrashed()->forceDelete();
     return response()->json([
       'deleted' => $deleted
     ]);

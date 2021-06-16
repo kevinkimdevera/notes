@@ -1,4 +1,4 @@
-const mix = require('laravel-mix');
+const mix = require('laravel-mix')
 
 /*
  |--------------------------------------------------------------------------
@@ -11,9 +11,9 @@ const mix = require('laravel-mix');
  |
  */
 
-mix.disableNotifications();
+mix.disableNotifications()
 
 mix.js('resources/js/app.js', 'public/js')
   .vue()
   .extract(['vue'])
-  .version();
+  .version()

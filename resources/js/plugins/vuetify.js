@@ -10,10 +10,13 @@ const opts = {
   theme: {
     themes: {
       light: {
-        primary: colors.yellow,
+        primary: colors.amber
       },
-    },
-  },
+      dark: {
+        primary: colors.amber
+      }
+    }
+  }
 }
 
 export default new Vuetify(opts)

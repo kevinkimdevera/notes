@@ -32,33 +32,16 @@
     </v-dialog>
 
     <!-- ADD NEW NOTE BUTTON -->
-    <v-tooltip left>
-      <template #activator="{ on }">
-        <v-btn
-          fab
-          large
-          fixed
-          bottom
-          right
-          dark
-          v-on="on"
-          color="red"
-        >
-          <v-icon>mdi-delete-empty-outline</v-icon>
-        </v-btn>
-      </template>
-      <span>Empty Trash</span>
-    </v-tooltip>
   </div>
 </template>
 
 <script>
-import NoteCard from '../components/NoteCard'
+import NoteCard from '../components/Notes/Card'
 
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
-  data() {
+  data () {
     return {
       selectedNote: null,
       confirmDeleteDialog: false
@@ -68,41 +51,41 @@ export default {
     NoteCard
   },
 
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter (to, from, next) {
     next(vm => {
-      vm.getNotes()
+      vm.getNotes({ filter: 'trash' })
     })
   },
 
   computed: {
     ...mapGetters({
-      trashedNotes: 'notes/TRASHED',
+      trashedNotes: 'notes/NOTES',
       notesLoading: 'notes/LOADING',
-      viewMode: 'notes/VIEW_MODE'
+      viewMode: 'settings/VIEW_MODE'
     }),
-    gridView() {
-      return this.viewMode == 'grid'
+    gridView () {
+      return this.viewMode === 'grid'
     },
 
-    listView() {
-      return this.viewMode == 'agenda'
+    listView () {
+      return this.viewMode === 'agenda'
     },
 
-    colXL() {
+    colXL () {
       return this.gridView ? 2 : 12
     },
 
-    colLG() {
+    colLG () {
       return this.gridView ? 3 : 12
     },
 
-    colMD() {
+    colMD () {
       return this.gridView ? 4 : 12
     },
 
-    colXS() {
+    colXS () {
       return this.gridView ? 6 : 12
-    },
+    }
   },
 
   methods: {
@@ -110,25 +93,20 @@ export default {
       _getNotes: 'notes/GET',
       _deleteForever: 'notes/DELETE_FOREVER',
       _restoreNote: 'notes/RESTORE',
-      setLoading: 'notes/CHANGE_LOADING_STATUS',
+      setLoading: 'notes/CHANGE_LOADING_STATUS'
     }),
-    getNotes() {
-      this.setLoading(true)
-
-      this._getNotes()
-        .then(() => {
-          this.setLoading(false)
-        })
+    getNotes (params) {
+      this._getNotes(params)
     },
-    closeDelete() {
+    closeDelete () {
       this.selectedNote = null
       this.confirmDeleteDialog = false
     },
-    confirmDelete(note) {
+    confirmDelete (note) {
       this.selectedNote = note
       this.confirmDeleteDialog = true
     },
-    deleteForever(data) {
+    deleteForever (data) {
       this.setLoading(true)
 
       this._deleteForever(data)
@@ -142,7 +120,7 @@ export default {
           this.setLoading(false)
         })
     },
-    restore(data) {
+    restore (data) {
       this.setLoading(true)
 
       this._restoreNote(data)

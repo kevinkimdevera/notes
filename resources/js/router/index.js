@@ -1,41 +1,39 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-Vue.use(VueRouter)
-
 import Notes from '../pages/Notes.vue'
-import Trash from '../pages/Trash.vue'
-import Archive from '../pages/Archive.vue'
+
+Vue.use(VueRouter)
 
 const router = new VueRouter({
   mode: 'history',
   base: '/',
   routes: [
     {
-      path: '/',
+      path: '/:filter?',
       component: Notes,
-      name: 'notes.index',
+      name: 'notes',
       meta: {
-        title: 'My Notes'
-      }
-    },
-    {
-      path: '/archive',
-      component: Archive,
-      name: 'notes.archive',
-      meta: {
-        title: 'Archive'
-      }
-    },
-    {
-      path: '/trash',
-      component: Trash,
-      name: 'notes.trash',
-      meta: {
-        title: 'Trash'
-      }
-    },
+        title: 'Notes'
+      },
+      props: true
+    }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  // VALIDATE PARAMS FOR NOTES FILTERS
+
+  if (to.name === 'notes') {
+    const filter = to.params?.filter
+    const valid = !filter || (['archive', 'trash'].indexOf(filter) !== -1)
+
+    if (!valid) {
+      next('/')
+    }
+
+    next()
+  }
 })
 
 export default router

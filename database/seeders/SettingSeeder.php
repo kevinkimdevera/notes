@@ -14,8 +14,11 @@ class SettingSeeder extends Seeder
    */
   public function run()
   {
+    DB::table('settings')->truncate();
+
     DB::table('settings')->insert([
-      ['key' => 'view', 'value' => 'grid']
+      ['key' => 'view', 'value' => 'grid'],
+      ['key' => 'theme', 'value' => 'light'],
     ]);
   }
 }

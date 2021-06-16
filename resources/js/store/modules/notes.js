@@ -1,39 +1,21 @@
 import notesApi from '../../api/notes'
-import settingsApi from '../../api/settings'
 
 const state = {
-  unpinned: null,
-  pinned: null,
-  archived: null,
-  trashed: null,
+  notes: null,
   loading: false,
-  saving: false,
-  settings: {
-    view: 'grid'
-  },
+  saving: false
 }
 
 const getters = {
-  PINNED: state => state.pinned,
-  UNPINNED: state => state.unpinned,
-  ARCHIVED: state => state.archived,
-  TRASHED: state => state.trashed,
+  NOTES: state => state.notes,
   LOADING: state => state.loading,
-  SAVING: state => state.saving,
-
-  VIEW_MODE: state => state.settings.view,
+  SAVING: state => state.saving
 }
 
 const mutations = {
-  SET_UNPINNED: (state, data) => ( state.unpinned = data ),
-  SET_PINNED: (state, data) => ( state.pinned = data ),
-  SET_ARCHIVED: (state, data) => (state.archived = data ),
-  SET_TRASHED: (state, data) => ( state.trashed = data ),
-  SET_LOADING: (state, data) => ( state.loading = data ),
-  SET_SAVING: (state, data) => ( state.saving = data ),
-
-  SET_SETTINGS: (state, data) => ( state.settings = data ),
-  SET_VIEW: (state, data) => ( state.settings.view = data )
+  SET_NOTES: (state, payload) => { state.notes = payload },
+  SET_LOADING: (state, payload) => { state.loading = payload },
+  SET_SAVING: (state, payload) => { state.saving = payload }
 }
 
 const actions = {
@@ -43,48 +25,54 @@ const actions = {
   CHANGE_SAVING_STATUS: ({ commit }, data) => {
     commit('SET_SAVING', data)
   },
-  CHANGE_VIEW_MODE: async ({ commit }, data) => {
-    commit('SET_VIEW', data)
-
-    commit('SET_LOADING', true)
-    await settingsApi.updateSettings({
-      key: 'view',
-      value: data
-    })
-    commit('SET_LOADING', false)
+  CLEAR_NOTES: ({ commit }) => {
+    commit('SET_NOTES', null)
   },
-  GET: async ({ commit }) => {
-    const response = await notesApi.getNotes()
-
-    commit('SET_UNPINNED', response.data?.notes?.unpinned)
-    commit('SET_PINNED', response.data?.notes?.pinned)
-    commit('SET_ARCHIVED', response.data?.notes?.archived)
-    commit('SET_TRASHED', response.data?.notes?.trashed)
-    commit('SET_SETTINGS', response.data?.settings)
+  GET: async ({ commit }, params) => {
+    commit('SET_LOADING', true)
+    const response = await notesApi.getNotes(params)
+    commit('SET_LOADING', false)
+    commit('SET_NOTES', response.data?.notes)
   },
   SAVE: async ({ commit }, data) => {
+    commit('SET_SAVING', true)
     const response = await notesApi.saveNote(data)
+    commit('SET_SAVING', false)
     return response.data?.saved
   },
   UPDATE: async ({ commit }, data) => {
+    commit('SET_SAVING', true)
     const response = await notesApi.updateNote(data)
+    commit('SET_SAVING', false)
     return response.data?.updated
   },
-  DELETE: async({ commit }, data) => {
+  DELETE: async ({ commit }, data) => {
+    commit('SET_SAVING', true)
     const response = await notesApi.deleteNote(data)
+    commit('SET_SAVING', false)
     return response.data?.deleted
   },
-  DELETE_FOREVER: async({ commit }, data) => {
+  DELETE_FOREVER: async ({ commit }, data) => {
+    commit('SET_SAVING', true)
     const response = await notesApi.forceDeleteNote(data)
+    commit('SET_SAVING', false)
     return response.data?.deleted
   },
-  RESTORE: async({ commit }, data) => {
+  RESTORE: async ({ commit }, data) => {
+    commit('SET_SAVING', true)
     const response = await notesApi.restoreNote(data)
+    commit('SET_SAVING', false)
     return response.data?.restored
   },
+  EMPTY_TRASH: async ({ commit }, data) => {
+    commit('SET_SAVING', true)
+    const response = await notesApi.emptyTrash()
+    commit('SET_SAVING', false)
+    return response.data?.deleted
+  }
 }
 
-export default({
+export default ({
   namespaced: true,
   state,
   getters,

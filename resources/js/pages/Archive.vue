@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import NoteCard from '../components/NoteCard'
+import NoteCard from '../components/Notes/Card'
 
 import { mapActions, mapGetters } from 'vuex'
 
@@ -29,58 +29,50 @@ export default {
     NoteCard
   },
 
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter (to, from, next) {
     next(vm => {
-      vm.getNotes()
+      vm.getNotes({ filter: 'archive' })
     })
   },
 
   computed: {
     ...mapGetters({
-      archivedNotes: 'notes/ARCHIVED',
-      viewMode: 'notes/VIEW_MODE'
+      archivedNotes: 'notes/NOTES',
+      viewMode: 'settings/VIEW_MODE'
     }),
-    gridView() {
-      return this.viewMode == 'grid'
+    gridView () {
+      return this.viewMode === 'grid'
     },
 
-    listView() {
-      return this.viewMode == 'agenda'
+    listView () {
+      return this.viewMode === 'agenda'
     },
 
-    colXL() {
+    colXL () {
       return this.gridView ? 2 : 12
     },
 
-    colLG() {
+    colLG () {
       return this.gridView ? 3 : 12
     },
 
-    colMD() {
+    colMD () {
       return this.gridView ? 4 : 12
     },
 
-    colXS() {
+    colXS () {
       return this.gridView ? 6 : 12
-    },
+    }
   },
 
-    methods: {
+  methods: {
     ...mapActions({
-      _getNotes: 'notes/GET',
+      getNotes: 'notes/GET',
       _updateNote: 'notes/UPDATE',
       _deleteNote: 'notes/DELETE',
-      setLoading: 'notes/CHANGE_LOADING_STATUS',
+      setLoading: 'notes/CHANGE_LOADING_STATUS'
     }),
-    getNotes() {
-      this.setLoading(true)
-
-      this._getNotes()
-        .then(() => {
-          this.setLoading(false)
-        })
-    },
-    updateNote(id, data) {
+    updateNote (id, data) {
       this.setLoading(true)
 
       this._updateNote(id, data)
@@ -93,7 +85,7 @@ export default {
           this.setLoading(false)
         })
     },
-    deleteNote(data) {
+    deleteNote (data) {
       this.setLoading(true)
 
       this._deleteNote(data)

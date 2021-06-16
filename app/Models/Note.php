@@ -24,6 +24,7 @@ class Note extends Model
     'archived_at' => 'datetime'
   ];
 
+
   public function scopePinned($query)
   {
     return $query->whereNotNull('pinned_at');

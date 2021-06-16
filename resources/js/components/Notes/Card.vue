@@ -1,15 +1,22 @@
 <template>
   <v-hover v-slot="{ hover }">
-    <v-card :elevation="hover ? 2 : 0" outlined :color="noteColor" rounded @click="$emit('click', note)">
+    <v-card
+      class="note-card flex d-flex flex-column"
+      min-height="200"
+      :color="cardColor"
+      :elevation="hover ? 3 : 0"
+      outlined
+      rounded
+      :ripple="false"
+      @click="showNote"
+    >
       <template v-if="hasTitle">
-        <v-card-title class="text-subtitle-2 font-weight-bold pb-0">{{ noteTitle }}
-      </v-card-title>
+        <v-card-title class="flex flex-grow-0 note-title text-subtitle-2 font-weight-bold pb-2">{{ noteTitle }}</v-card-title>
       </template>
-      <v-card-text :style="{ 'min-height': hasTitle ? '58px' : '96px'}" class=" text-truncate d-inline-block">
-        <span class="note-text text-subtitle-1">{{ noteContent }}</span>
-      </v-card-text>
 
-      <v-card-actions style="min-height: 52px;">
+      <v-card-text class="flex flex-grow-1 note-text overflow-hidden">{{ noteContent }}</v-card-text>
+
+      <v-card-actions class="note-actions d-flex align-baseline">
         <template v-if="hover || $vuetify.breakpoint.smAndDown">
 
           <template v-if="!noteTrashed">
@@ -40,9 +47,9 @@
                 </v-tooltip>
               </template>
 
-              <v-card class="pa-1" width="155">
+              <v-card class="pa-1" width="117">
                 <template v-for="(color, i) in colors">
-                  <v-btn @click.stop="changeColor(color)" :key="`color-col-${i}`" icon small :class="`${color} lighten-3 ma-1`" elevation="1">
+                  <v-btn @click.stop="changeColor(color)" :key="`color-col-${i}`" icon small :class="`${color} ${ darkMode ? 'darken-4' : 'lighten-4' } ma-1 btn-color`" elevation="1">
                     <v-icon>
                       {{ color == noteColor ? 'mdi-check' : '' }}
                     </v-icon>
@@ -108,55 +115,93 @@ import { mapGetters } from 'vuex'
 
 export default {
   props: {
+    selected: {
+      type: Boolean
+    },
     note: {
       type: Object
-    },
+    }
   },
 
-  data() {
+  data () {
     return {
       colors: [
-        'white', 'red', 'pink', 'purple', 'indigo', 'blue', 'cyan', 'teal', 'green', 'blue-grey', 'orange', 'brown'
-      ],
+        'default', 'pink', 'indigo', 'light-blue', 'teal', 'orange'
+      ]
     }
   },
 
   computed: {
     ...mapGetters({
-      viewMode: 'notes/VIEW_MODE'
+      viewMode: 'settings/VIEW_MODE',
+      theme: 'settings/THEME'
     }),
-    hasTitle() {
-      return !!this.note?.title
+    // Check App Theme
+    darkMode () {
+      return this.theme === 'dark'
     },
-    noteId() {
+
+    // Note ID
+    noteId () {
       return this.note?.id
     },
-    notePinned() {
+
+    // Note is pinned
+    notePinned () {
       return this.note?.pinned
     },
-    noteArchived() {
+
+    // Note is archived
+    noteArchived () {
       return this.note?.archived
     },
-    noteColor() {
-      return this.note?.color == 'white' ? null : `${this.note?.color} lighten-4`
+
+    // Note is trashed
+    noteTrashed () {
+      return this.note?.trashed
     },
-    noteTitle() {
+
+    // Note Color
+    noteColor () {
+      return this.note?.color
+    },
+
+    // Color applied to the card
+    cardColor () {
+      const color = this.noteColor === 'default' ? null : this.noteColor
+      const theme = this.darkMode ? 'darken-4' : 'lighten-4'
+
+      return `${color} ${theme}`
+    },
+
+    // Check if note has saved title
+    hasTitle () {
+      return !!this.note?.title
+    },
+
+    // Note Card Title
+    noteTitle () {
       return this.note?.title
     },
-    noteContent() {
-      var limit = ((this.viewMode == 'grid') && (this.$vuetify.breakpoint.mdAndUp)) ? '50' : '150'
+
+    // Note Card Content
+    noteContent () {
+      const limit = ((this.viewMode === 'grid') && (this.$vuetify.breakpoint.mdAndUp)) ? '70' : '150'
 
       return (this.note?.contents?.length > limit)
         ? this.note?.contents?.substring(0, limit) + '...'
         : this.note?.contents
-    },
-    noteTrashed() {
-      return this.note?.trashed
     }
   },
 
   methods: {
-    changeColor(color) {
+    // Show Note Dialog
+    showNote () {
+      this.$emit('click', this.note)
+    },
+
+    // Change Note Color
+    changeColor (color) {
       this.$emit('update', {
         id: this.noteId,
         data: {
@@ -164,7 +209,9 @@ export default {
         }
       })
     },
-    togglePin() {
+
+    // Toggle pin status of note
+    togglePin () {
       this.$emit('update', {
         id: this.noteId,
         data: {
@@ -172,26 +219,37 @@ export default {
         }
       })
     },
-    toggleArchive() {
-      this.$emit('update', {
-        id: this.noteId,
-        data: {
-          pinned_at: null,
-          archived_at: this.noteArchived ? null : moment().format('Y-MM-DD HH:mm:ss')
+
+    // Toggle archive status of Note
+    toggleArchive () {
+      this.$emit('archive', {
+        status: !this.noteArchived,
+        note: {
+          id: this.noteId,
+          data: {
+            pinned_at: null,
+            archived_at: this.noteArchived ? null : moment().format('Y-MM-DD HH:mm:ss')
+          }
         }
       })
     },
-    deleteNote() {
+
+    // Trash Note (Soft Delete)
+    deleteNote () {
       this.$emit('delete', {
         id: this.noteId
       })
     },
-    deleteForever() {
+
+    // Permanently Remove Note
+    deleteForever () {
       this.$emit('delete-forever', {
         id: this.noteId
       })
     },
-    restore() {
+
+    // Restore note if Trashed
+    restore () {
       this.$emit('restore', {
         id: this.noteId
       })
@@ -199,9 +257,3 @@ export default {
   }
 }
 </script>
-
-<style>
-  .note-text {
-    white-space: pre-line;
-  }
-</style>

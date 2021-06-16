@@ -1,23 +1,23 @@
-require('./bootstrap');
-
-import Vue from 'vue';
+import Vue from 'vue'
 
 // =============================================================================
 // Vuetify
 // =============================================================================
-import vuetify from './plugins/vuetify';
+import vuetify from './plugins/vuetify'
 
 // =============================================================================
 // VUEX Store
 // =============================================================================
-import store from './store';
+import store from './store'
 
 // =============================================================================
 // Router
 // =============================================================================
-import router from './router';
+import router from './router'
 
-Vue.component('app', require('./layouts/App.vue').default);
+require('./bootstrap')
+
+Vue.component('app', require('./layouts/App.vue').default)
 
 Vue.config.productionTip = false
 
@@ -27,5 +27,3 @@ const app = new Vue({
   store,
   router
 })
-
-

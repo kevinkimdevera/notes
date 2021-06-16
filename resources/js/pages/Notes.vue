@@ -2,35 +2,51 @@
   <div class="pb-4">
     <v-container>
       <v-row :justify="listView ? 'center' : 'start'">
-        <v-col cols="12" :lg="gridView ? 12 : 5">
-          <template v-if="hasPinnedNotes">
-            <p class="overline" key="pinned-notes-label">PINNED</p>
-          </template>
-
+        <v-col cols="12" :xl="gridView ? 12 : 5" :lg="gridView ? 12 : 7" mode="in-out">
+          <!-- PINNED NOTES -->
           <v-row>
+            <template v-if="hasPinnedNotes">
+              <p class="overline my-0 col-12" key="pinned-notes-label">PINNED</p>
+            </template>
+
             <template v-for="(note, i) in pinnedNotes">
-              <v-col cols="12" :md="colMD" :lg="colLG" :xl="colXL" :key="`note-${i}`">
+              <v-col
+                cols="12" :sm="colSM" :md="colMD" :lg="colLG" :xl="colXL" :key="`note-${i}`"
+                class="d-flex flex-column">
                 <note-card
-                  @click="viewNote(note)"
                   :note="note"
+                  @click="viewNote(note)"
+                  @archive="toggleArchive"
                   @update="updateNote"
-                  @delete="deleteNote"/>
+                  @delete="deleteNote"
+                  @delete-forever="confirmDelete"
+                  @restore="restoreNote"/>
               </v-col>
             </template>
           </v-row>
 
-          <template v-if="hasPinnedNotes && hasUnpinnedNotes">
-            <p class="overline mt-5" key="unpinned-notes-label">OTHERS</p>
-          </template>
+          <!-- UNPINNED NOTES -->
+          <v-row>
+            <template v-if="hasPinnedNotes && hasUnpinnedNotes">
+              <p class="overline my-0 col-12" key="unpinned-notes-label">OTHERS</p>
+            </template>
 
-          <v-row :justify="listView ? 'center' : 'start'">
             <template v-for="(note, i) in unpinnedNotes">
-              <v-col cols="12" :md="colMD" :lg="colLG" :xl="colXL" :key="`note-${i}`">
-                <note-card
-                  @click="viewNote(note)"
-                  :note="note"
-                  @update="updateNote"
-                  @delete="deleteNote"/>
+              <v-col
+                cols="12" :sm="colSM"  :md="colMD" :lg="colLG" :xl="colXL"
+                :key="`note-${i}`"
+                class="d-flex flex-column"
+              >
+                <v-fade-transition hide-on-leave>
+                  <note-card
+                    :note="note"
+                    @click="viewNote(note)"
+                    @archive="toggleArchive"
+                    @update="updateNote"
+                    @delete="deleteNote"
+                    @delete-forever="confirmDelete"
+                    @restore="restoreNote"/>
+                </v-fade-transition>
               </v-col>
             </template>
           </v-row>
@@ -39,109 +55,76 @@
     </v-container>
 
     <!-- CREATE / EDIT NOTE -->
-    <v-dialog width="580" v-model="noteDialog" persistent scrollable>
-      <v-form @submit.prevent="saveNote">
-        <v-card :color="selectedNoteColor" id="createNoteCard">
-          <v-card-title class="px-2">
-            <!-- TITLE -->
-            <v-textarea
-              dense
-              solo
-              flat
-              auto-grow
-              no-resize
-              rows="1"
-              placeholder="Title"
-              v-model="noteTitle"
-              class="font-weight-bold"
-              hide-details>
-            </v-textarea>
-          </v-card-title>
-          <v-card-text class="px-2">
-            <!-- CONTENT -->
-            <v-textarea
-              rows="2"
-              auto-grow
-              flat
-              solo
-              no-resize
-              v-model="noteContent"
-              placeholder="Take a note..." />
+    <note-dialog
+      :show="noteDialog"
+      :note="selectedNote"
+      @update="updateNote"
+      @archive="toggleArchive"
+      @close="closeCreateNote"
+      @snackbar="showSnackbar"
+      @delete-forever="confirmDelete"
+      @restore="restoreNote" />
 
-            <v-row dense no-gutters class="px-2">
-              <v-col cols="12"></v-col>
-              <template v-if="!!noteUpdated">
-                <v-col  cols="12" class="text-right text-small text-caption">Edited: {{ noteUpdated }}</v-col>
-              </template>
-            </v-row>
-          </v-card-text>
-
-          <v-card-actions>
-            <!-- PINNED -->
-            <v-tooltip bottom>
-              <template #activator="{ on }">
-                <v-btn @click="notePinned = !notePinned" v-on="on" icon>
-                  <v-icon>mdi-pin{{ notePinned ? '' : '-outline'}}</v-icon>
-                </v-btn>
-              </template>
-              <span>{{ notePinned ? 'Unpin' : 'Pin' }} Note</span>
-            </v-tooltip>
-
-            <!-- COLOR -->
-            <v-menu offset-y top>
-              <template #activator="{ on: menu }">
-                <v-tooltip bottom>
-                  <template #activator="{ on: tooltip }">
-                    <v-btn icon v-on="{ ...menu, ...tooltip }">
-                      <v-icon>mdi-palette-outline</v-icon>
-                    </v-btn>
-                  </template>
-
-                  <span>Change Color</span>
-                </v-tooltip>
-              </template>
-
-              <v-card class="pa-1" width="155">
-                <template v-for="(color, i) in colors">
-                  <v-btn @click="noteColor = color" :key="`color-col-${i}`" icon small :class="`${color} lighten-2 ma-1`" elevation="1">
-                    <v-icon>
-                      {{ color == noteColor ? 'mdi-check' : '' }}
-                    </v-icon>
-                  </v-btn>
-                </template>
-              </v-card>
-            </v-menu>
-
-            <!-- ARCHIVED -->
-            <template v-if="!!selectedNote">
-            <v-tooltip bottom>
-              <template #activator="{ on }">
-                <v-btn @click.stop="archiveNote" v-on="on" icon>
-                  <v-icon>mdi-archive-arrow-{{ noteArchived ? 'up' : 'down' }}-outline</v-icon>
-                </v-btn>
-              </template>
-              <span>{{ noteArchived ? 'Unarchive' : 'Archive' }}</span>
-            </v-tooltip>
-            </template>
-
-            <v-spacer></v-spacer>
-            <v-btn text @click="closeCreateNote">Cancel</v-btn>
-            <v-btn text type="submit" :disabled="saveDisabled" :loading="notesLoading">Save</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-form>
+    <!-- CONFIRM DELETE NOTE -->
+    <v-dialog width="290" v-model="confirmDeleteDialog">
+      <v-card>
+        <v-card-title class=" text-subtitle-1">Delete note forever?</v-card-title>
+        <v-card-text>
+          This action cannot be undone.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="closeDelete">Cancel</v-btn>
+          <v-btn color="red" text @click="deleteNoteForever" :loading="noteSaving">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
     </v-dialog>
 
-    <!-- ADD NEW NOTE BUTTON -->
-    <v-tooltip left>
-      <template #activator="{ on }">
+    <!-- CONFIRM EMPTY TRASH -->
+    <v-dialog width="290" v-model="confirmEmptyTrashDialog">
+      <v-card>
+        <v-card-title class=" text-subtitle-1">Empty Trash?</v-card-title>
+        <v-card-text>
+          All notes in Trash will be permanently deleted.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="confirmEmptyTrashDialog = false">Cancel</v-btn>
+          <v-btn color="red" text @click="emptyTrash" :loading="noteSaving">Empty Trash</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-fab-transition group hide-on-leave>
+
+      <template v-if="filter == 'trash'">
+        <!-- EMPTY TRASH -->
+        <template v-if="hasTrash">
+          <v-btn
+            @click="confirmEmptyTrashDialog = true"
+            key="trash-fab"
+            fab
+            large
+            fixed
+            bottom
+            right
+            dark
+            color="red"
+          >
+            <v-icon>mdi-delete-empty-outline</v-icon>
+          </v-btn>
+        </template>
+      </template>
+
+      <template v-if="!filter">
+        <!-- ADD NEW NOTE BUTTON -->
         <v-btn
+          key="new-note-fab"
           fab
           large
           fixed
           bottom
           right
-          v-on="on"
           @click="createNote"
           class=" black--text"
           color="primary"
@@ -149,240 +132,292 @@
           <v-icon>mdi-plus</v-icon>
         </v-btn>
       </template>
-      <span>New Note</span>
-    </v-tooltip>
+
+    </v-fab-transition>
+
+    <!-- SNACKBAR -->
+    <v-snackbar v-model="snackbar" app>
+      {{ snackbarMessage }}
+
+      <template #action="{ attrs }">
+        <v-btn
+          icon
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
 <script>
 import moment from 'moment'
 
-import NoteCard from '../components/NoteCard'
+import NoteCard from '../components/Notes/Card'
+import NoteDialog from '../components/Notes/Dialog'
 
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
-  components: {
-    NoteCard
+  props: {
+    filter: {
+      type: String,
+      default: null
+    }
   },
-  data() {
+
+  components: {
+    NoteCard,
+    NoteDialog
+  },
+
+  data () {
     return {
       noteDialog: false,
-
-      noteTitle: null,
-      noteContent: null,
-      noteColor: 'white',
-      notePinned: false,
-      noteArchived: false,
-      noteUpdated: null,
+      confirmDeleteDialog: false,
+      confirmEmptyTrashDialog: false,
       selectedNote: null,
-
+      snackbar: false,
+      snackbarMessage: null,
       colors: [
-        'white', 'red', 'pink', 'purple', 'indigo', 'blue', 'cyan', 'teal', 'green', 'blue-grey', 'orange', 'brown'
+        'default', 'red', 'pink', 'purple', 'indigo', 'light-blue', 'cyan', 'teal', 'green', 'blue-grey', 'orange', 'brown'
       ]
     }
   },
 
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter (to, from, next) {
     next(vm => {
-      vm.getNotes()
+      vm.getNotes(to.params.filter)
     })
+  },
+
+  beforeRouteUpdate (to, from, next) {
+    this.clearNotes()
+    this.getNotes(to.params.filter)
+    next()
   },
 
   computed: {
     ...mapGetters({
-      pinnedNotes: 'notes/PINNED',
-      unpinnedNotes: 'notes/UNPINNED',
+      notes: 'notes/NOTES',
       notesLoading: 'notes/LOADING',
       noteSaving: 'notes/SAVING',
 
-      viewMode: 'notes/VIEW_MODE'
+      viewMode: 'settings/VIEW_MODE'
     }),
 
-    gridView() {
-      return this.viewMode == 'grid'
+    pinnedNotes () {
+      return this.notes?.filter(n => n.pinned)
     },
 
-    listView() {
-      return this.viewMode == 'agenda'
+    unpinnedNotes () {
+      return this.notes?.filter(n => !n.pinned)
     },
 
-    colXL() {
+    gridView () {
+      return this.viewMode === 'grid'
+    },
+
+    listView () {
+      return this.viewMode === 'agenda'
+    },
+
+    colXL () {
       return this.gridView ? 2 : 12
     },
 
-    colLG() {
+    colLG () {
       return this.gridView ? 3 : 12
     },
 
-    colMD() {
-      return this.gridView ? 4 : 12
-    },
-
-    colXS() {
+    colMD () {
       return this.gridView ? 6 : 12
     },
 
-    saveDisabled() {
-      return !this.noteContent
+    colSM () {
+      return this.gridView ? 6 : 12
     },
 
-    selectedNoteColor() {
-      return `${ this.noteColor } lighten-4`
+    hasTrash () {
+      return this.filter === 'trash' && this.notes?.length > 0
     },
 
-    hasPinnedNotes() {
+    hasPinnedNotes () {
       return this.pinnedNotes?.length > 0
     },
 
-    hasUnpinnedNotes() {
+    hasUnpinnedNotes () {
       return this.unpinnedNotes?.length > 0
-    },
-
-    noteDetails() {
-      return {
-        title: this.noteTitle,
-        contents: this.noteContent,
-        color: this.noteColor,
-        pinned_at: this.notePinned ? moment().format('Y-MM-DD HH:mm:ss') : null,
-        archived_at: this.noteArchived ? moment().format('Y-MM-DD HH:mm:ss') : null
-      }
     }
   },
 
   methods: {
     ...mapActions({
+      _getSettings: 'settings/GET',
+      clearNotes: 'notes/CLEAR_NOTES',
       _getNotes: 'notes/GET',
-      _saveNote: 'notes/SAVE',
       _updateNote: 'notes/UPDATE',
       _deleteNote: 'notes/DELETE',
+      _restoreNote: 'notes/RESTORE',
+      _deleteForever: 'notes/DELETE_FOREVER',
+      _emptyTrash: 'notes/EMPTY_TRASH',
       setLoading: 'notes/CHANGE_LOADING_STATUS',
       setSaving: 'notes/CHANGE_SAVING_STATUS'
     }),
 
-    clearFields() {
-      this.noteTitle = null
-      this.noteContent = null
-      this.noteColor = 'white'
-      this.notePinned = false
-      this.noteArchived = false
-      this.noteUpdated = null
+    // SHOW SNACKBAR
+    showSnackbar (message) {
+      this.snackbarMessage = message
+      this.snackbar = true
     },
-    createNote() {
+
+    // SHOW CREATE NOTE
+    createNote () {
       this.selectedNote = null
-      this.clearFields()
       this.noteDialog = true
     },
-    closeCreateNote() {
-      this.selectedNote = null
+
+    // CLOSE CREATE NOTE DIALOG
+    closeCreateNote (saved) {
       this.noteDialog = false
-    },
-    getNotes() {
-      this.setLoading(true)
 
-      this._getNotes()
-        .then(() => {
-          this.setLoading(false)
-        })
+      if (saved) {
+        this.reloadNotes()
+      }
+
+      this.selectedNote = null
     },
-    viewNote(note) {
+
+    // SHOW CONFIRMATION WHEN DELETING NOTE FOREVER
+    confirmDelete (note) {
       this.selectedNote = note
+      this.confirmDeleteDialog = true
+    },
 
-      this.noteTitle = note?.title
-      this.noteContent = note?.contents
-      this.noteColor = note?.color
-      this.notePinned = note?.pinned
-      this.noteArchived = note?.archived
-      this.noteUpdated = note?.updated_at
+    // CLOSE DELETE FOREVER CONFIRMATION
+    closeDelete () {
+      this.confirmDeleteDialog = false
+    },
 
+    reloadNotes () {
+      this._getNotes({
+        filter: this.$router.currentRoute.params?.filter
+      })
+    },
+
+    getNotes (filter) {
+      this._getNotes({
+        filter: filter
+      })
+    },
+
+    viewNote (note) {
+      this.selectedNote = note
       this.noteDialog = true
     },
-    saveNote() {
-      this.setLoading(true)
 
-      if (!!this.selectedNote) {
-        this._updateNote({
-          id: this.selectedNote.id,
-          data: this.noteDetails
-        })
-        .then((saved) => {
-          if (saved) {
-            this.noteDialog = false
-            this._getNotes()
-          }
-        })
-        .then(() => {
-          this.setLoading(false)
-        })
-      }
-      else
-      {
-        this._saveNote(this.noteDetails)
-          .then((saved) => {
-            if (saved) {
-              this.noteDialog = false
-              this._getNotes()
-            }
-          })
-          .then(() => {
-            this.setLoading(false)
-          })
-      }
-    },
-    archiveNote() {
-      if (!!this.selectedNote) {
-        this.setLoading(true)
-
+    // ARCHIVE NOTE
+    archiveNote () {
+      if (this.selectedNote) {
         this._updateNote({
           id: this.selectedNote.id,
           data: {
             pinned_at: null,
             archived_at: this.noteArchived ? null : moment().format('Y-MM-DD HH:mm:ss')
           }
+        }).then((saved) => {
+          if (saved) {
+            this.showSnackbar('Note archived.')
+            this.noteDialog = false
+            this.reloadNotes()
+          }
         })
-          .then((saved) => {
-            if (saved) {
-              this.noteDialog = false
-              this._getNotes()
-            }
-          })
-          .then(() => {
-            this.setLoading(false)
-          })
       }
     },
-    updateNote(data) {
-      this.setLoading(true)
 
+    // TOGGLE ARCHIVE
+    toggleArchive (data) {
+      const archive = data.status
+
+      this._updateNote(data.note)
+        .then((saved) => {
+          if (saved) {
+            if (this.noteDialog) {
+              this.closeCreateNote(saved)
+            }
+
+            if (archive) {
+              this.showSnackbar('Note archived.')
+            } else {
+              this.showSnackbar('Note unarchived.')
+            }
+
+            this.reloadNotes()
+          }
+        })
+    },
+
+    // UPDATE NOTE
+    updateNote (data) {
       this._updateNote(data)
         .then((saved) => {
           if (saved) {
-            this._getNotes()
+            if (!this.noteDialog) {
+              this.reloadNotes()
+            }
           }
         })
-        .then(() => {
-          this.setLoading(false)
-        })
     },
-    deleteNote(data) {
-      this.setLoading(true)
 
+    // DELETE NOTE
+    deleteNote (data) {
       this._deleteNote(data)
         .then((deleted) => {
           if (deleted) {
-            this._getNotes()
+            this.noteDialog = false
+            this.showSnackbar('Note trashed.')
+            this.reloadNotes()
           }
         })
-        .then(() => {
-          this.setLoading(false)
+    },
+
+    // RESTORE NOTE
+    restoreNote (data) {
+      this._restoreNote(data)
+        .then((restored) => {
+          if (restored) {
+            this.noteDialog = false
+            this.showSnackbar('Note restored.')
+            this.reloadNotes()
+          }
+        })
+    },
+
+    // DELETE NOTE PERMANENTLY
+    deleteNoteForever () {
+      this._deleteForever(this.selectedNote)
+        .then((deleted) => {
+          if (deleted) {
+            this.noteDialog = false
+            this.confirmDeleteDialog = false
+            this.showSnackbar('Note deleted forever.')
+            this.reloadNotes()
+          }
+        })
+    },
+
+    emptyTrash () {
+      this._emptyTrash()
+        .then((deleted) => {
+          if (deleted) {
+            this.confirmEmptyTrashDialog = false
+            this.showSnackbar('Trash emptied.')
+            this.reloadNotes()
+          }
         })
     }
   }
 }
 </script>
-
-<style>
-  #createNoteCard .v-text-field--solo > .v-input__control> .v-input__slot {
-    background: transparent !important;
-  }
-</style>
