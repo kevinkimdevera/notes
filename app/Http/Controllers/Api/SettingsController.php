@@ -8,22 +8,13 @@ use App\Http\Controllers\Controller;
 
 class SettingsController extends Controller
 {
-  public function get() {
-    $settings = Setting::all()->mapWithKeys( function($item) {
-      return [$item['key'] => $item['value']];
-    });
-
-    return [
-      'view' => $settings['view'] ?? 'grid',
-      'theme' => $settings['theme'] ?? 'light'
-    ];
-  }
-
   public function update(Request $request) {
-    $saved = Setting::upsert([
-        'key' => $request->key,
-        'value' => $request->value
-      ], ['key']);
+    $saved = $request->user()
+      ->settings()
+      ->update([
+        'dark' => $request->dark,
+        'view' => $request->view
+      ]);
 
     return response()->json([
       'saved' => $saved

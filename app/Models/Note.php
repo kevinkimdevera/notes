@@ -12,6 +12,7 @@ class Note extends Model
   use HasFactory, SoftDeletes;
 
   protected $fillable = [
+    'user_id',
     'title',
     'contents',
     'color',

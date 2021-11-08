@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NotesController;
 use App\Http\Controllers\Api\SettingsController;
 
@@ -15,31 +16,48 @@ use App\Http\Controllers\Api\SettingsController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::name('api.')->group(function () {
+  Route::prefix('auth')->name('auth.')->group(function () {
+    // REGISTER ACCOUNT
+    Route::post('register', [AuthController::class, 'registerAccount'])->name('register');
 
-Route::name('notes.')->prefix('notes')->group(function() {
-  // GET NOTES
-  Route::get('/', [ NotesController::class, 'get' ])->name('get');
+    // LOGIN
+    Route::post('login', [AuthController::class, 'attemptLogin'])->name('login');
+  });
 
-  // SAVE NOTE
-  Route::post('/', [ NotesController::class, 'store' ])->name('store');
+  Route::middleware(['auth:sanctum'])->group(function () {
+    // USER DATA
+    Route::prefix('auth')->name('auth.')->group(function () {
+      Route::get('user', [AuthController::class, 'showUser'])->name('user.show');
 
-  // UPDATE NOTE
-  Route::patch('/{note}', [ NotesController::class, 'update' ])->name('update');
+      // USER SETTINGS
+      Route::name('user.settings.')->prefix('settings')->group(function() {
+        Route::patch('/', [ SettingsController::class, 'update' ])->name('update');
+      });
+    });
 
-  // SOFT DELETE NOTE
-  Route::delete('/{note}', [ NotesController::class, 'delete' ])->name('delete.soft');
+    Route::name('notes.')->prefix('notes')->group(function() {
+      // GET NOTES
+      Route::get('/', [ NotesController::class, 'get' ])->name('get');
 
-  // FORCE DELETE NOTE
-  Route::delete('/{note}/force', [ NotesController::class, 'deleteForever' ])->name('delete.force');
+      // SAVE NOTE
+      Route::post('/', [ NotesController::class, 'store' ])->name('store');
 
-  // RESTORE NOTE
-  Route::patch('/{note}/restore', [ NotesController::class, 'restore' ])->name('restore');
+      // UPDATE NOTE
+      Route::patch('/{note}', [ NotesController::class, 'update' ])->name('update');
 
-  // DELETE ALL SOFT-DELETED NOTES
-  Route::delete('/', [ NotesController::class, 'emptyTrash' ])->name('delete.trash');
+      // SOFT DELETE NOTE
+      Route::delete('/{note}', [ NotesController::class, 'delete' ])->name('delete.soft');
+
+      // FORCE DELETE NOTE
+      Route::delete('/{note}/force', [ NotesController::class, 'deleteForever' ])->name('delete.force');
+
+      // RESTORE NOTE
+      Route::patch('/{note}/restore', [ NotesController::class, 'restore' ])->name('restore');
+
+      // DELETE ALL SOFT-DELETED NOTES
+      Route::delete('/', [ NotesController::class, 'emptyTrash' ])->name('delete.trash');
+    });
+  });
 });
 
-Route::name('setting.')->prefix('settings')->group(function() {
-  Route::get('/', [ SettingsController::class, 'get' ])->name('get');
-  Route::patch('/', [ SettingsController::class, 'update' ])->name('update');
-});

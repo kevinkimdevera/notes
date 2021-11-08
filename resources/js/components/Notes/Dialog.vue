@@ -1,7 +1,18 @@
 <template>
-  <v-dialog width="580" :value="show" persistent scrollable>
-    <v-form @submit.prevent="save" class="note-form">
-      <v-card :color="selectedColor" id="createNoteCard">
+  <v-dialog
+    width="580"
+    :value="show"
+    persistent
+    scrollable
+  >
+    <v-form
+      @submit.prevent="save"
+      class="note-form"
+    >
+      <v-card
+        :color="selectedColor"
+        id="createNoteCard"
+      >
         <v-card-title class="px-2">
           <!-- TITLE -->
           <v-textarea
@@ -15,8 +26,8 @@
             v-model="title"
             :readonly="noteTrashed"
             class="font-weight-bold note-input"
-            hide-details>
-          </v-textarea>
+            hide-details
+          />
         </v-card-title>
 
         <v-card-text class="px-2">
@@ -30,13 +41,21 @@
             no-resize
             :readonly="noteTrashed"
             v-model="content"
-            placeholder="Take a note..." />
+            placeholder="Take a note..."
+          />
 
-          <v-row dense no-gutters class="px-2">
-            <v-col cols="12"></v-col>
+          <v-row
+            dense
+            no-gutters
+            class="px-2"
+          >
+            <v-col cols="12" />
 
             <template v-if="!!updated">
-              <v-col cols="12" class="text-right text-small text-caption">
+              <v-col
+                cols="12"
+                class="text-right text-small text-caption"
+              >
                 <span v-if="noteArchived">
                   Note in Archive&nbsp;&middot;&nbsp;
                 </span>
@@ -55,7 +74,11 @@
             <!-- DELETE FOREVER -->
             <v-tooltip bottom>
               <template #activator="{ on }">
-                <v-btn v-on="on" icon @click.stop="deleteForever">
+                <v-btn
+                  v-on="on"
+                  icon
+                  @click.stop="deleteForever"
+                >
                   <v-icon>mdi-delete-forever</v-icon>
                 </v-btn>
               </template>
@@ -65,7 +88,11 @@
             <!-- RESTORE -->
             <v-tooltip bottom>
               <template #activator="{ on }">
-                <v-btn v-on="on" icon @click.stop="restore">
+                <v-btn
+                  v-on="on"
+                  icon
+                  @click.stop="restore"
+                >
                   <v-icon>mdi-delete-restore</v-icon>
                 </v-btn>
               </template>
@@ -77,19 +104,29 @@
             <!-- TOGGLE PIN -->
             <v-tooltip bottom>
               <template #activator="{ on }">
-                <v-btn @click="togglePin" v-on="on" icon>
-                  <v-icon>mdi-pin{{ pinned ? '' : '-outline'}}</v-icon>
+                <v-btn
+                  @click="togglePin"
+                  v-on="on"
+                  icon
+                >
+                  <v-icon>mdi-pin{{ pinned ? '' : '-outline' }}</v-icon>
                 </v-btn>
               </template>
               <span>{{ pinned ? 'Unpin' : 'Pin' }} Note</span>
             </v-tooltip>
 
             <!-- COLOR -->
-            <v-menu offset-y top>
+            <v-menu
+              offset-y
+              top
+            >
               <template #activator="{ on: menu }">
                 <v-tooltip bottom>
                   <template #activator="{ on: tooltip }">
-                    <v-btn icon v-on="{ ...menu, ...tooltip }">
+                    <v-btn
+                      icon
+                      v-on="{ ...menu, ...tooltip }"
+                    >
                       <v-icon>mdi-palette-outline</v-icon>
                     </v-btn>
                   </template>
@@ -98,9 +135,19 @@
                 </v-tooltip>
               </template>
 
-              <v-card class="pa-1" width="117">
+              <v-card
+                class="pa-1"
+                width="117"
+              >
                 <template v-for="(_color, i) in colors">
-                  <v-btn @click="color = _color" :key="`color-col-${i}`" icon small :class="`${_color} ${ darkMode ? 'darken-4' : 'lighten-4' } ma-1 btn-color`" elevation="1">
+                  <v-btn
+                    @click="color = _color"
+                    :key="`color-col-${i}`"
+                    icon
+                    small
+                    :class="`${_color} ${ darkMode ? 'darken-4' : 'lighten-4' } ma-1 btn-color`"
+                    elevation="1"
+                  >
                     <v-icon>
                       {{ color === _color ? 'mdi-check' : '' }}
                     </v-icon>
@@ -113,7 +160,11 @@
             <template v-if="viewingNote">
               <v-tooltip bottom>
                 <template #activator="{ on }">
-                  <v-btn @click.stop="toggleArchive" v-on="on" icon>
+                  <v-btn
+                    @click.stop="toggleArchive"
+                    v-on="on"
+                    icon
+                  >
                     <v-icon>mdi-archive-arrow-{{ archived ? 'up' : 'down' }}-outline</v-icon>
                   </v-btn>
                 </template>
@@ -122,9 +173,22 @@
             </template>
           </template>
 
-          <v-spacer></v-spacer>
-          <v-btn text type="button" @click.stop="close(false)">Close</v-btn>
-          <v-btn text type="submit" :disabled="saveDisabled || noteTrashed" :loading="noteSaving">Save</v-btn>
+          <v-spacer />
+          <v-btn
+            text
+            type="button"
+            @click.stop="close(false)"
+          >
+            Close
+          </v-btn>
+          <v-btn
+            text
+            type="submit"
+            :disabled="saveDisabled || noteTrashed"
+            :loading="noteSaving"
+          >
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -170,12 +234,12 @@ export default {
 
   computed: {
     ...mapGetters({
+      userSettings: 'auth/USER_SETTINGS',
       notesLoading: 'notes/LOADING',
-      noteSaving: 'notes/SAVING',
-      theme: 'settings/THEME'
+      noteSaving: 'notes/SAVING'
     }),
     darkMode () {
-      return this.theme === 'dark'
+      return this.userSettings?.dark
     },
     viewingNote () {
       return !!this.note

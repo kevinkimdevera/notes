@@ -2,17 +2,33 @@
   <div class="pb-4">
     <v-container>
       <v-row :justify="listView ? 'center' : 'start'">
-        <v-col cols="12" :xl="gridView ? 12 : 5" :lg="gridView ? 12 : 7" mode="in-out">
+        <v-col
+          cols="12"
+          :xl="gridView ? 12 : 5"
+          :lg="gridView ? 12 : 7"
+          mode="in-out"
+        >
           <!-- PINNED NOTES -->
           <v-row>
             <template v-if="hasPinnedNotes">
-              <p class="overline my-0 col-12" key="pinned-notes-label">PINNED</p>
+              <p
+                class="overline my-0 col-12"
+                key="pinned-notes-label"
+              >
+                PINNED
+              </p>
             </template>
 
             <template v-for="(note, i) in pinnedNotes">
               <v-col
-                cols="12" :sm="colSM" :md="colMD" :lg="colLG" :xl="colXL" :key="`note-${i}`"
-                class="d-flex flex-column">
+                cols="12"
+                :sm="colSM"
+                :md="colMD"
+                :lg="colLG"
+                :xl="colXL"
+                :key="`note-${i}`"
+                class="d-flex flex-column"
+              >
                 <note-card
                   :note="note"
                   @click="viewNote(note)"
@@ -20,7 +36,8 @@
                   @update="updateNote"
                   @delete="deleteNote"
                   @delete-forever="confirmDelete"
-                  @restore="restoreNote"/>
+                  @restore="restoreNote"
+                />
               </v-col>
             </template>
           </v-row>
@@ -28,12 +45,21 @@
           <!-- UNPINNED NOTES -->
           <v-row>
             <template v-if="hasPinnedNotes && hasUnpinnedNotes">
-              <p class="overline my-0 col-12" key="unpinned-notes-label">OTHERS</p>
+              <p
+                class="overline my-0 col-12"
+                key="unpinned-notes-label"
+              >
+                OTHERS
+              </p>
             </template>
 
             <template v-for="(note, i) in unpinnedNotes">
               <v-col
-                cols="12" :sm="colSM"  :md="colMD" :lg="colLG" :xl="colXL"
+                cols="12"
+                :sm="colSM"
+                :md="colMD"
+                :lg="colLG"
+                :xl="colXL"
                 :key="`note-${i}`"
                 class="d-flex flex-column"
               >
@@ -45,7 +71,8 @@
                     @update="updateNote"
                     @delete="deleteNote"
                     @delete-forever="confirmDelete"
-                    @restore="restoreNote"/>
+                    @restore="restoreNote"
+                  />
                 </v-fade-transition>
               </v-col>
             </template>
@@ -63,40 +90,77 @@
       @close="closeCreateNote"
       @snackbar="showSnackbar"
       @delete-forever="confirmDelete"
-      @restore="restoreNote" />
+      @restore="restoreNote"
+    />
 
     <!-- CONFIRM DELETE NOTE -->
-    <v-dialog width="290" v-model="confirmDeleteDialog">
+    <v-dialog
+      width="290"
+      v-model="confirmDeleteDialog"
+    >
       <v-card>
-        <v-card-title class=" text-subtitle-1">Delete note forever?</v-card-title>
+        <v-card-title class=" text-subtitle-1">
+          Delete note forever?
+        </v-card-title>
         <v-card-text>
           This action cannot be undone.
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="closeDelete">Cancel</v-btn>
-          <v-btn color="red" text @click="deleteNoteForever" :loading="noteSaving">Delete</v-btn>
+          <v-spacer />
+          <v-btn
+            text
+            @click="closeDelete"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="red"
+            text
+            @click="deleteNoteForever"
+            :loading="noteSaving"
+          >
+            Delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- CONFIRM EMPTY TRASH -->
-    <v-dialog width="290" v-model="confirmEmptyTrashDialog">
+    <v-dialog
+      width="290"
+      v-model="confirmEmptyTrashDialog"
+    >
       <v-card>
-        <v-card-title class=" text-subtitle-1">Empty Trash?</v-card-title>
+        <v-card-title class=" text-subtitle-1">
+          Empty Trash?
+        </v-card-title>
         <v-card-text>
           All notes in Trash will be permanently deleted.
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="confirmEmptyTrashDialog = false">Cancel</v-btn>
-          <v-btn color="red" text @click="emptyTrash" :loading="noteSaving">Empty Trash</v-btn>
+          <v-spacer />
+          <v-btn
+            text
+            @click="confirmEmptyTrashDialog = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="red"
+            text
+            @click="emptyTrash"
+            :loading="noteSaving"
+          >
+            Empty Trash
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-fab-transition group hide-on-leave>
-
+    <v-fab-transition
+      group
+      hide-on-leave
+    >
       <template v-if="filter == 'trash'">
         <!-- EMPTY TRASH -->
         <template v-if="hasTrash">
@@ -132,11 +196,13 @@
           <v-icon>mdi-plus</v-icon>
         </v-btn>
       </template>
-
     </v-fab-transition>
 
     <!-- SNACKBAR -->
-    <v-snackbar v-model="snackbar" app>
+    <v-snackbar
+      v-model="snackbar"
+      app
+    >
       {{ snackbarMessage }}
 
       <template #action="{ attrs }">
@@ -201,12 +267,15 @@ export default {
 
   computed: {
     ...mapGetters({
+      userSettings: 'auth/USER_SETTINGS',
       notes: 'notes/NOTES',
       notesLoading: 'notes/LOADING',
-      noteSaving: 'notes/SAVING',
-
-      viewMode: 'settings/VIEW_MODE'
+      noteSaving: 'notes/SAVING'
     }),
+
+    viewMode () {
+      return this.userSettings?.view
+    },
 
     pinnedNotes () {
       return this.notes?.filter(n => n.pinned)
@@ -255,7 +324,6 @@ export default {
 
   methods: {
     ...mapActions({
-      _getSettings: 'settings/GET',
       clearNotes: 'notes/CLEAR_NOTES',
       _getNotes: 'notes/GET',
       _updateNote: 'notes/UPDATE',

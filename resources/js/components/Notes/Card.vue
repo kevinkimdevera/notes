@@ -11,22 +11,28 @@
       @click="showNote"
     >
       <template v-if="hasTitle">
-        <v-card-title class="flex flex-grow-0 note-title text-subtitle-2 font-weight-bold pb-2">{{ noteTitle }}</v-card-title>
+        <v-card-title class="flex flex-grow-0 text-subtitle-2 font-weight-bold pb-2">
+          <pre class="text-wrap note-wrap">{{ noteTitle }}</pre>
+        </v-card-title>
       </template>
 
-      <v-card-text class="flex flex-grow-1 note-text overflow-hidden">{{ noteContent }}</v-card-text>
+      <v-card-text class="flex flex-grow-1 overflow-hidden">
+        <pre class="text-wrap note-wrap">{{ noteContent }}</pre>
+      </v-card-text>
 
       <v-card-actions class="note-actions d-flex align-baseline">
         <template v-if="hover || $vuetify.breakpoint.smAndDown">
-
           <template v-if="!noteTrashed">
-
             <template v-if="!noteArchived">
               <!-- PIN/UNPIN NOTE -->
               <v-tooltip bottom>
                 <template #activator="{ on }">
-                  <v-btn @click.stop="togglePin" v-on="on" icon>
-                    <v-icon>mdi-pin{{ notePinned ? '' : '-outline'}}</v-icon>
+                  <v-btn
+                    @click.stop="togglePin"
+                    v-on="on"
+                    icon
+                  >
+                    <v-icon>mdi-pin{{ notePinned ? '' : '-outline' }}</v-icon>
                   </v-btn>
                 </template>
                 <span>{{ notePinned ? 'Unpin' : 'Pin' }} Note</span>
@@ -34,11 +40,18 @@
             </template>
 
             <!-- CHANGE COLOR -->
-            <v-menu offset-y top :attach="true">
+            <v-menu
+              offset-y
+              top
+              :attach="true"
+            >
               <template #activator="{ on: menu }">
                 <v-tooltip bottom>
                   <template #activator="{ on: tooltip }">
-                    <v-btn icon v-on="{ ...menu, ...tooltip }">
+                    <v-btn
+                      icon
+                      v-on="{ ...menu, ...tooltip }"
+                    >
                       <v-icon>mdi-palette-outline</v-icon>
                     </v-btn>
                   </template>
@@ -47,9 +60,19 @@
                 </v-tooltip>
               </template>
 
-              <v-card class="pa-1" width="117">
+              <v-card
+                class="pa-1"
+                width="117"
+              >
                 <template v-for="(color, i) in colors">
-                  <v-btn @click.stop="changeColor(color)" :key="`color-col-${i}`" icon small :class="`${color} ${ darkMode ? 'darken-4' : 'lighten-4' } ma-1 btn-color`" elevation="1">
+                  <v-btn
+                    @click.stop="changeColor(color)"
+                    :key="`color-col-${i}`"
+                    icon
+                    small
+                    :class="`${color} ${ darkMode ? 'darken-4' : 'lighten-4' } ma-1 btn-color`"
+                    elevation="1"
+                  >
                     <v-icon>
                       {{ color == noteColor ? 'mdi-check' : '' }}
                     </v-icon>
@@ -61,19 +84,27 @@
             <!-- ARCHIVE -->
             <v-tooltip bottom>
               <template #activator="{ on }">
-                <v-btn @click.stop="toggleArchive" v-on="on" icon>
+                <v-btn
+                  @click.stop="toggleArchive"
+                  v-on="on"
+                  icon
+                >
                   <v-icon>mdi-archive-arrow-{{ noteArchived ? 'up' : 'down' }}-outline</v-icon>
                 </v-btn>
               </template>
               <span>{{ noteArchived ? 'Unarchive' : 'Archive' }}</span>
             </v-tooltip>
 
-            <v-spacer></v-spacer>
+            <v-spacer />
 
             <!-- DELETE NOTE -->
             <v-tooltip bottom>
               <template #activator="{ on }">
-                <v-btn @click.stop="deleteNote" v-on="on" icon>
+                <v-btn
+                  @click.stop="deleteNote"
+                  v-on="on"
+                  icon
+                >
                   <v-icon>mdi-delete-outline</v-icon>
                 </v-btn>
               </template>
@@ -85,7 +116,11 @@
             <!-- DELETE FOREVER -->
             <v-tooltip bottom>
               <template #activator="{ on }">
-                <v-btn v-on="on" icon @click.stop="deleteForever">
+                <v-btn
+                  v-on="on"
+                  icon
+                  @click.stop="deleteForever"
+                >
                   <v-icon>mdi-delete-forever</v-icon>
                 </v-btn>
               </template>
@@ -95,13 +130,16 @@
             <!-- RESTORE -->
             <v-tooltip bottom>
               <template #activator="{ on }">
-                <v-btn v-on="on" icon @click.stop="restore">
+                <v-btn
+                  v-on="on"
+                  icon
+                  @click.stop="restore"
+                >
                   <v-icon>mdi-delete-restore</v-icon>
                 </v-btn>
               </template>
               <span>Restore</span>
             </v-tooltip>
-
           </template>
         </template>
       </v-card-actions>
@@ -133,12 +171,17 @@ export default {
 
   computed: {
     ...mapGetters({
-      viewMode: 'settings/VIEW_MODE',
-      theme: 'settings/THEME'
+      userSettings: 'auth/USER_SETTINGS'
     }),
+
     // Check App Theme
     darkMode () {
-      return this.theme === 'dark'
+      return this.userSettings?.dark
+    },
+
+    // Check View Mode
+    viewMode () {
+      return this.userSettings?.view
     },
 
     // Note ID

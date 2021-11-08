@@ -12,8 +12,10 @@ class NotesController extends Controller
   {
     $filter = $request->get('filter');
 
+    $notes = Note::where('user_id', $request->user()->id)
+
     // WHEN FILTER IS NOT SPECIFIED
-    $notes = Note::when(!$filter, function ($q) {
+    ->when(!$filter, function ($q) {
       // Get unarchived notes
       return $q->unarchived()
 
@@ -52,7 +54,9 @@ class NotesController extends Controller
     // https://laravel.com/docs/8.x/eloquent#upserts
 
     $saved = Note::upsert(
-      $request->all(),
+      $request->merge([
+        'user_id' => $request->user()->id
+      ])->all(),
       'id'
     );
 
