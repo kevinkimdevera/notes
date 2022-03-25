@@ -4,7 +4,7 @@
       :value="userLoading"
       opacity="1"
       absolute
-      color="white"
+      :color="darkMode ? 'black' : 'white'"
     >
       <v-progress-circular
         indeterminate
@@ -51,6 +51,9 @@ export default {
     currentPageTitle () {
       const currentRoute = this.$router.currentRoute
       return currentRoute.params.filter || currentRoute.meta.title
+    },
+    darkMode () {
+      return this.user?.settings?.dark
     }
   },
   watch: {

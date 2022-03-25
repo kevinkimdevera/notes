@@ -4,59 +4,80 @@
     <v-navigation-drawer
       app
       clipped
-      floating
       :dark="darkMode"
-      v-model="mainNav"
-      :permanent="$vuetify.breakpoint.mdAndUp"
-      width="280"
+      permanent
+      mini-variant
+      :disable-resize-watcher="true"
     >
       <!-- NAV LINKS -->
       <v-list
-        shaped
         dense
+        nav
+        flat
       >
         <template v-for="(link, i) in navLinks">
-          <!-- MAKE SURE TO HAVE KEY ON FOR LOOPS -->
-          <v-list-item
-            link
-            exact
+          <v-tooltip
+            right
             :key="`nav-link-${i}`"
-            :active-class="`${ darkMode ? 'primary--text darken-4' : 'primary lighten-4' }`"
-            :to="link.to"
           >
-            <v-list-item-icon>
-              <v-icon>{{ link.icon }}</v-icon>
-            </v-list-item-icon>
-            <v-list-item-title>
-              {{ link.text }}
-            </v-list-item-title>
-          </v-list-item>
+            <template #activator="{ on }">
+              <v-list-item
+                link
+                exact
+                v-on="on"
+                :active-class="`${ darkMode ? 'primary--text' : 'primary lighten-4' }`"
+                :to="link.to"
+              >
+                <v-list-item-icon>
+                  <v-icon>{{ link.icon }}</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title>{{ link.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+            <span>{{ link.text }}</span>
+          </v-tooltip>
         </template>
       </v-list>
-
-      <v-list
-        shaped
-        dense
-        subheader
-      >
-        <v-subheader>LABELS</v-subheader>
-      </v-list>
+      <template #append>
+        <v-list
+          dense
+          nav
+        >
+          <!-- TOGGLE DARK MODE -->
+          <v-tooltip right>
+            <template #activator="{ on }">
+              <v-list-item
+                @click.stop="toggleDarkMode"
+                link
+                v-on="on"
+              >
+                <v-list-item-action-text>
+                  <template v-if="changingTheme">
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="24" />
+                  </template>
+                  <template v-else>
+                    <v-icon>mdi-{{ darkMode ? 'white-balance-sunny' : 'weather-night' }}</v-icon>
+                  </template>
+                </v-list-item-action-text>
+              </v-list-item>
+            </template>
+            <span>{{ darkMode ? 'Disable' : 'Enable' }} dark theme</span>
+          </v-tooltip>
+        </v-list>
+      </template>
     </v-navigation-drawer>
 
     <!-- MAIN APP BAR -->
     <v-app-bar
       app
-      color="primary"
-      light
+      :dark="darkMode"
       clipped-left
-      clipped-right
-      elevate-on-scroll
+      elevation="0"
+      class="v-bar__underlined"
     >
-      <!-- NAVIGATION TOGGLE -->
-      <template v-if="$vuetify.breakpoint.smAndDown">
-        <v-app-bar-nav-icon @click="toggleNav" />
-      </template>
-
       <v-toolbar-title class=" text-capitalize">
         {{ title }}
       </v-toolbar-title>
@@ -78,23 +99,6 @@
           </v-btn>
         </template>
         <span>Refresh</span>
-      </v-tooltip>
-
-      <!-- DARK MODE -->
-      <v-tooltip bottom>
-        <template #activator="{ on }">
-          <v-btn
-            icon
-            @click="toggleDarkMode"
-            v-on="on"
-            :loading="changingTheme"
-          >
-            <v-icon>
-              mdi-{{ darkMode ? 'white-balance-sunny' : 'weather-night' }}
-            </v-icon>
-          </v-btn>
-        </template>
-        <span>{{ darkMode ? 'Disable' : 'Enable' }} dark theme</span>
       </v-tooltip>
 
       <template v-if="$vuetify.breakpoint.mdAndUp">
@@ -261,6 +265,7 @@ export default {
     user (val) {
       if (val) {
         this.$nextTick(() => {
+          localStorage.setItem('settings.dark', val?.settings?.dark)
           this.$vuetify.theme.dark = val?.settings?.dark
         })
       }
@@ -327,3 +332,13 @@ export default {
   }
 }
 </script>
+
+<style>
+  .theme--light.v-bar__underlined {
+    border-bottom: thin solid rgba(0,0,0,.12) !important;
+  }
+
+  .theme--dark.v-bar__underlined {
+    border-bottom: thin solid hsla(0,0%,100%,.12) !important;
+  }
+</style>

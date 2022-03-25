@@ -62,7 +62,7 @@
                 <span v-if="noteTrashed">
                   Note in Trash&nbsp;&middot;&nbsp;
                 </span>
-                Edited: {{ updated }}
+                Last Updated: {{ updated }}
               </v-col>
             </template>
           </v-row>
@@ -141,7 +141,7 @@
               >
                 <template v-for="(_color, i) in colors">
                   <v-btn
-                    @click="color = _color"
+                    @click="changeColor(_color)"
                     :key="`color-col-${i}`"
                     icon
                     small
@@ -301,6 +301,18 @@ export default {
           this.close(saved)
           this.$emit('snackbar', this.note ? 'Note updated' : 'Note Saved')
         })
+    },
+
+    // Change Note Color
+    changeColor (color) {
+      this.color = color
+
+      this.$emit('update', {
+        id: this.note.id,
+        data: {
+          color: color
+        }
+      })
     },
 
     togglePin () {

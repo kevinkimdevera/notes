@@ -17,28 +17,22 @@ class NotesController extends Controller
     // WHEN FILTER IS NOT SPECIFIED
     ->when(!$filter, function ($q) {
       // Get unarchived notes
-      return $q->unarchived()
-
       // Sort by created_at DESC (newsest -> oldest)
-        ->latest();
+      return $q->unarchived()->latest();
     })
 
     // WHEN FILTER IS 'archive'
     ->when(($filter == 'archive'), function ($q) {
       // Get archived notes
-      return $q->archived()
-
       // Sort by archived_at DESC
-        ->latest('archived_at');
+      return $q->archived()->latest('archived_at');
     })
 
     // WHEN FILTER IS TRASH
     ->when(($filter == 'trash'), function ($q) {
       // Get only trashed (soft deleted model) notes [deleted_at IS NOT NULL]
-      return $q->onlyTrashed()
-
       // Sort by deleted_at DESC
-        ->latest('deleted_at');
+      return $q->onlyTrashed()->latest('deleted_at');
     })
 
     // GET ALL RESULTS

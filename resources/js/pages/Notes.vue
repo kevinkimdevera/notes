@@ -1,11 +1,43 @@
 <template>
   <div class="pb-4">
     <v-container>
+      <template v-if="filter === 'trash'">
+        <v-row justify="center">
+          <v-col
+            cols="12"
+            md="8"
+            lg="6"
+            xl="4"
+          >
+            <v-alert>
+              <v-row align="center">
+                <v-col class="grow text-center">
+                  Deleted notes are removed after 7 days.
+                </v-col>
+                <template v-if="hasTrash">
+                  <v-col class="shrink">
+                    <v-btn
+                      color="danger"
+                      @click="confirmEmptyTrashDialog = true"
+                      class="ml-3"
+                      depressed
+                    >
+                      Empty Trash
+                    </v-btn>
+                  </v-col>
+                </template>
+              </v-row>
+            </v-alert>
+          </v-col>
+        </v-row>
+      </template>
+
       <v-row :justify="listView ? 'center' : 'start'">
         <v-col
           cols="12"
-          :xl="gridView ? 12 : 5"
-          :lg="gridView ? 12 : 7"
+          :md="gridView ? 12 : 8"
+          :lg="gridView ? 12 : 6"
+          :xl="gridView ? 12 : 4"
           mode="in-out"
         >
           <!-- PINNED NOTES -->
@@ -161,25 +193,6 @@
       group
       hide-on-leave
     >
-      <template v-if="filter == 'trash'">
-        <!-- EMPTY TRASH -->
-        <template v-if="hasTrash">
-          <v-btn
-            @click="confirmEmptyTrashDialog = true"
-            key="trash-fab"
-            fab
-            large
-            fixed
-            bottom
-            right
-            dark
-            color="red"
-          >
-            <v-icon>mdi-delete-empty-outline</v-icon>
-          </v-btn>
-        </template>
-      </template>
-
       <template v-if="!filter">
         <!-- ADD NEW NOTE BUTTON -->
         <v-btn
@@ -227,6 +240,7 @@ import NoteDialog from '../components/Notes/Dialog'
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
+  name: 'NotesPage',
   props: {
     filter: {
       type: String,
